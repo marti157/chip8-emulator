@@ -1,18 +1,18 @@
 CC = g++
-CFLAGS = -Wall -lSDL2
-DEPS = chip8.h
-OBJS = main.o chip8.o
-OUT = chip8
+CFLAGS = -std=c++17 -Wall
 
 ifeq ($(shell sh -c 'uname 2>/dev/null'), Darwin) # Mac OS
 	$(error Use XCode on Mac OS)
 endif
 
-%.o: %.cc $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+chip8: main.o chip8.o
+	$(CC) $(CFLAGS) -o chip8 main.o chip8.o `sdl2-config --cflags --libs`
 
-chip8: $(OBJS)
-	$(CC) $^ $(CFLAGS) -o $@
+main.o: main.cpp chip8.h
+	$(CC) $(CFLAGS) -c main.cpp
+
+chip8.o: chip8.cpp chip8.h
+	$(CC) $(CFLAGS) -c chip8.cpp
 
 clean:
-	rm -f chip8
+	rm -f chip8 main.o chip8.o
