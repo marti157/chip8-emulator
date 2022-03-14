@@ -16,8 +16,16 @@ unsigned char* readHexFile(std::string fileDir, unsigned short& pSize) {
 }
 
 int main(int argc, const char* argv[]) {
+    if (argc == 1) {
+        printf("Please add the program's path as an argument.\n");
+        
+        return 0;
+    }
+    
+    printf("Loading program from: %s\n", argv[1]);
+    
     unsigned short size;
-    unsigned char* hexContents = readHexFile("examples/space_invaders.ch8", size);
+    unsigned char* hexContents = readHexFile(argv[1], size);
     
     CHIP8 emulator;
     emulator.init();

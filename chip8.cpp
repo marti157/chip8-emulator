@@ -129,7 +129,7 @@ void CHIP8::runProgram() {
         if (currTick != prevTick) {
             prevTick = currTick;
             
-            if (currTick % (1000 / freq) == 0 && DT == 0) {
+            if (currTick % (1000 / freq) == 0) {
                 if (!tick())
                     break;
             }
@@ -181,8 +181,8 @@ bool CHIP8::execInst(u16 op) {
             PC = stack[--SP];
             break;
         default:
-            u8 x = V[op >> 8 & 0xF];
-            u8 y = V[op >> 4 & 0xF];
+            u8 x = op >> 8 & 0xF;
+            u8 y = op >> 4 & 0xF;
             
             switch(op >> 12) {
                 case 0x1: // Jump to location nnn
@@ -197,63 +197,63 @@ bool CHIP8::execInst(u16 op) {
                     PC = (op & 0xFFF) - 2;
                     break;
                 case 0x3: // Skip next instruction if Vx = kk
-                    if (V[op >> 8 & 0xF] == (op & 0xFF))
+                    if (V[x] == (op & 0xFF))
                         PC += 2;
                     break;
                 case 0x4: // Skip next instruction if Vx != kk
-                    if (V[op >> 8 & 0xF] != (op & 0xFF))
+                    if (V[x] != (op & 0xFF))
                         PC += 2;
                     break;
                 case 0x5: // Skip next instruction if Vx = Vy.
-                    if (V[op >> 8 & 0xF] == V[op >> 4 & 0xF])
+                    if (V[x] == V[y])
                         PC += 2;
                     break;
                 case 0x6: // Set Vx = kk
-                    V[op >> 8 & 0xF] = op & 0xFF;
+                    V[x] = op & 0xFF;
                     break;
                 case 0x7: // Set Vx = Vx + kk
-                    V[op >> 8 & 0xF] += op & 0xFF;
+                    V[x] += op & 0xFF;
                     break;
                 case 0x8:
                     switch (op & 0xF) {
                         case 0: // Set Vx = Vy
-                            V[op >> 8 & 0xF] = V[op >> 4 & 0xF];
+                            V[x] = V[y];
                             break;
                         case 1: // Set Vx = Vx OR Vy
-                            V[op >> 8 & 0xF] = V[op >> 8 & 0xF] | V[op >> 4 & 0xF];
+                            V[x] = V[x] | V[y];
                             break;
                         case 2: // Set Vx = Vx AND Vy
-                            V[op >> 8 & 0xF] = V[op >> 8 & 0xF] & V[op >> 4 & 0xF];
+                            V[x] = V[x] & V[y];
                             break;
                         case 3: // Set Vx = Vx XOR Vy
-                            V[op >> 8 & 0xF] = V[op >> 8 & 0xF] ^ V[op >> 4 & 0xF];
+                            V[x] = V[x] ^ V[y];
                             break;
                         case 4: // Set Vx = Vx + Vy, set VF = carry
-                            V[0xF] = V[op >> 8 & 0xF] + V[op >> 4 & 0xF] > 0xFF;
-                            V[op >> 8 & 0xF] = V[op >> 8 & 0xF] + V[op >> 4 & 0xF];
+                            V[0xF] = V[x] + V[y] > 0xFF;
+                            V[x] = V[x] + V[y];
                             break;
                         case 5: // Set Vx = Vx - Vy, set VF = NOT borrow
-                            V[0xF] = V[op >> 8 & 0xF] > V[op >> 4 & 0xF];
-                            V[op >> 8 & 0xF] = V[op >> 8 & 0xF] - V[op >> 4 & 0xF];
+                            V[0xF] = V[x] > V[y];
+                            V[x] = V[x] - V[y];
                             break;
                         case 6: // Set Vx = Vx SHR 1
-                            V[0xF] = V[op >> 8 & 0xF] & 0xF;
-                            V[op >> 8 & 0xF] = V[op >> 8 & 0xF] >> 1;
+                            V[0xF] = V[x] & 0xF;
+                            V[x] = V[x] >> 1;
                             break;
                         case 7: // Set Vx = Vy - Vx, set VF = NOT borrow
-                            V[0xF] =  V[op >> 4 & 0xF] > V[op >> 8 & 0xF];
-                            V[op >> 8 & 0xF] = V[op >> 4 & 0xF] - V[op >> 8 & 0xF];
+                            V[0xF] =  V[y] > V[x];
+                            V[x] = V[y] - V[x];
                             break;
                         case 0xE: // Set Vx = Vx SHL 1
-                            V[0xF] = V[op >> 8 & 0xF] & 0xF;
-                            V[op >> 8 & 0xF] = V[op >> 8 & 0xF] << 1;
+                            V[0xF] = V[x] & 0xF;
+                            V[x] = V[x] << 1;
                             break;
                         default:
                             printf("Unknown OPcode: %x\n", op);
                     }
                     break;
                 case 0x9: // Skip next instruction if Vx != Vy
-                    if (V[op >> 8 & 0xF] != V[op >> 4 & 0xF])
+                    if (V[x] != V[y])
                         PC += 2;
                     break;
                 case 0xA: // Set I = nnn
@@ -263,13 +263,13 @@ bool CHIP8::execInst(u16 op) {
                     PC = (op & 0xFFF) + V[0];
                     break;
                 case 0xC: // Set Vx = random byte AND kk
-                    V[op >> 8 & 0xF] = (rand() % 255) & (op & 0xFF);
+                    V[x] = (rand() % 255) & (op & 0xFF);
                     break;
                 case 0xD: { // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision
                     V[0xF] = 0;
                     for (u8 i = 0; i < (op & 0xF); i++) {
                         for (int8_t j = 7; j >= 0; j--) {
-                            u16 pos = (y + i) % ROWS * COLS + (x + 7 - j) % COLS;
+                            u16 pos = (V[y] + i) % ROWS * COLS + (V[x] + 7 - j) % COLS;
                             u8 val = (M[I + i] >> j) & 1;
                             if ((pixels[pos].status ^ val) != pixels[pos].status)
                                 V[0xF] = 1;
@@ -283,11 +283,13 @@ bool CHIP8::execInst(u16 op) {
                 case 0xE:
                     switch (op & 0xFF) {
                         case 0x9E: // Skip next instruction if key with the value of Vx is pressed
-                            if (SDL_GetKeyboardState(NULL)[keymap[op >> 8 & 0xF]])
+                            printf("Key %x: %d\n", V[x], SDL_GetKeyboardState(NULL)[keymap[V[x]]]);
+                            if (SDL_GetKeyboardState(NULL)[keymap[V[x]]])
                                 PC += 2;
                             break;
-                        case 0xA1: // Skip next instruction if key with the value of Vx is not pressed. SDL_GetKeyboardState(NULL)[keymap[op >> 8 & 0xF]]);
-                            if (!SDL_GetKeyboardState(NULL)[keymap[op >> 8 & 0xF]])
+                        case 0xA1: // Skip next instruction if key with the value of Vx is not pressed.
+                            printf("Key %x: %d\n", V[x], !SDL_GetKeyboardState(NULL)[keymap[V[x]]]);
+                            if (!SDL_GetKeyboardState(NULL)[keymap[V[x]]])
                                 PC += 2;
                             break;
                         default:
@@ -297,7 +299,7 @@ bool CHIP8::execInst(u16 op) {
                 case 0xF:
                     switch (op & 0xFF) {
                         case 0x7: // Set Vx = delay timer value
-                            V[op >> 8 & 0xF] = DT;
+                            V[x] = DT;
                             break;
                         case 0xA: { // Wait for a key press, store the value of the key in Vx
                             SDL_Event e;
@@ -307,7 +309,7 @@ bool CHIP8::execInst(u16 op) {
                                     if (e.type == SDL_KEYDOWN) {
                                         for (u8 i = 0; i < 16; i++) {
                                             if (keymap[i] == e.key.keysym.scancode) {
-                                                V[op >> 8 & 0xF] = i;
+                                                V[x] = i;
                                                 found = 1;
                                                 break;
                                             }
@@ -318,36 +320,33 @@ bool CHIP8::execInst(u16 op) {
                             break;
                         }
                         case 0x15: // Set delay timer = Vx
-                            DT = V[op >> 8 & 0xF];
+                            DT = V[x];
                             break;
                         case 0x18: // Set sound timer = Vx
-                            ST = V[op >> 8 & 0xF];
+                            ST = V[x];
                             if (ST != 0)
                                 SDL_PauseAudio(0); // play sound
                             else
                                 SDL_PauseAudio(1); // stop sound
                             break;
                         case 0x1E: // Set I = I + Vx
-                            I = I + V[op >> 8 & 0xF];
+                            I = I + V[x];
                             break;
                         case 0x29: // Set I = location of sprite for digit Vx
-                            /* do memory check (value of Vx can't go out of sprites) */
-                            I = V[op >> 8 & 0xF] * 5;
+                            I = V[x] * 5;
                             break;
                         case 0x33: // Store BCD representation of Vx in memory locations I, I+1, and I+2
-                            M[I] = V[op >> 8 & 0xF] / 100;
-                            M[I + 1] = (V[op >> 8 & 0xF] / 10) % 10;
-                            M[I + 2] = V[op >> 8 & 0xF] % 10;
+                            M[I] = V[x] / 100;
+                            M[I + 1] = (V[x] / 10) % 10;
+                            M[I + 2] = V[x] % 10;
                             break;
                         case 0x55: // Store registers V0 through Vx in memory starting at location I
-                            /* do memory addr check */
-                            for (u8 i = 0; i <= (op >> 8 & 0xF); i++) {
+                            for (u8 i = 0; i <= x; i++) {
                                 M[I + i] = V[i];
                             }
                             break;
                         case 0x65: // Read registers V0 through Vx from memory starting at location I
-                            /* do memory addr check */
-                            for (u8 i = 0; i <= (op >> 8 & 0xF); i++) {
+                            for (u8 i = 0; i <= x; i++) {
                                 V[i] = M[I + i];
                             }
                             break;
