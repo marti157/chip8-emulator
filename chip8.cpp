@@ -159,7 +159,8 @@ bool CHIP8::tick() {
     
     u16 op = M[PC] << 8 | M[PC + 1];
     
-    printf("inst: %x, PC: %x, time: %d\n", op, PC, SDL_GetTicks());
+    if (DEBUG_MSG)
+        printf("inst: %x, PC: %x, time: %d\n", op, PC, SDL_GetTicks());
     
     if (!execInst(op))
         return false;
@@ -283,12 +284,10 @@ bool CHIP8::execInst(u16 op) {
                 case 0xE:
                     switch (op & 0xFF) {
                         case 0x9E: // Skip next instruction if key with the value of Vx is pressed
-                            printf("Key %x: %d\n", V[x], SDL_GetKeyboardState(NULL)[keymap[V[x]]]);
                             if (SDL_GetKeyboardState(NULL)[keymap[V[x]]])
                                 PC += 2;
                             break;
                         case 0xA1: // Skip next instruction if key with the value of Vx is not pressed.
-                            printf("Key %x: %d\n", V[x], !SDL_GetKeyboardState(NULL)[keymap[V[x]]]);
                             if (!SDL_GetKeyboardState(NULL)[keymap[V[x]]])
                                 PC += 2;
                             break;

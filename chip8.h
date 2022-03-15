@@ -24,6 +24,8 @@ typedef uint16_t u16;
 #define ROWS 32
 #define COLS 64
 
+static const u8 DEBUG_MSG = 1;
+
 struct SDL_Rect_Pixel : SDL_Rect { u8 status; };
 
 class CHIP8 {
